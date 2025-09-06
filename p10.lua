@@ -1,26 +1,23 @@
--- FINAL: Fish It Loader (Password + Loader + Dashboard + Tabs)
+-- FINAL: Fish It Loader v2 (No Blur + Big Menu + Speed Feature)
 -- Place in StarterPlayerScripts (LocalScript)
 -- Password: YILZI-EXECUTOR
 
 -- ===== Services & Config =====
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local SoundService = game:GetService("SoundService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
 
 local PASSWORD = "YILZI-EXECUTOR"
-local CLICK_SOUND_ID = "rbxassetid://12221967" -- click
-local UI_W, UI_H = 620, 420
-local AUTO_FISH_CLIENT_INTERVAL = 4 -- client-side interval
-local CAST_EVENT_NAME = "RemoteEvent" -- change to your game's RemoteEvent name
+local CLICK_SOUND_ID = "rbxassetid://12221967" -- click sound
+local UI_W, UI_H = 800, 500 -- bigger menu
 
 -- ===== Helpers =====
 local function new(class, props)
     local obj = Instance.new(class)
-    if props then for k,v in pairs(props) do obj[k] = v end end
+    if props then for k,v in pairs(props) do obj[k] = v end
     return obj
 end
 local function tween(inst, props, t, style, dir)
@@ -28,27 +25,14 @@ local function tween(inst, props, t, style, dir)
     dir = dir or Enum.EasingDirection.Out
     TweenService:Create(inst, TweenInfo.new(t, style, dir), props):Play()
 end
-local function safeFireRemote(action)
-    pcall(function()
-        local ev = ReplicatedStorage:FindFirstChild(CAST_EVENT_NAME)
-        if ev and ev:IsA("RemoteEvent") then
-            ev:FireServer(action)
-        else
-            warn("RemoteEvent '"..CAST_EVENT_NAME.."' not found in ReplicatedStorage")
-        end
-    end)
+local function playClick()
+    local s = new("Sound", {Parent = game:GetService("SoundService"), SoundId = CLICK_SOUND_ID, Volume = 0.6})
+    s:Play()
+    task.delay(1, function() pcall(function() s:Destroy() end) end)
 end
 
 -- ===== Root GUI =====
 local screenGui = new("ScreenGui", {Name = "FishIt_FinalUI", Parent = game.CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling})
-
--- click sound
-local clickSound = new("Sound", {Parent = SoundService, SoundId = CLICK_SOUND_ID, Volume = 0.6})
-local function playClick() pcall(function() clickSound:Play() end) end
-
--- blur (client only)
-local lighting = game:GetService("Lighting")
-local blur = new("BlurEffect", {Parent = lighting, Size = 0})
 
 -- toast notifications
 local function toast(text, color)
@@ -57,7 +41,6 @@ local function toast(text, color)
     new("UICorner", {Parent = toast, CornerRadius = UDim.new(0, 8)})
     local label = new("TextLabel", {Parent = toast, Size = UDim2.new(1, -16, 1, 0), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1, Text = text, Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = Color3.fromRGB(255,255,255)})
     toast.AnchorPoint = Vector2.new(0.5, 0)
-    toast.Position = UDim2.new(0.5, -160, 0.12, 0)
     tween(toast, {Position = UDim2.new(0.5, -160, 0.06, 0), BackgroundTransparency = 0}, 0.18)
     task.delay(2.2, function()
         tween(toast, {Position = UDim2.new(0.5, -160, 0.12, 0), BackgroundTransparency = 1}, 0.18)
@@ -66,7 +49,7 @@ local function toast(text, color)
 end
 
 -- ===== PASSWORD SCREEN =====
-local passFrame = new("Frame", {Parent = screenGui, Name = "PasswordWindow", Size = UDim2.new(0, 380, 0, 200), Position = UDim2.new(0.5, -190, 0.5, -100), BackgroundColor3 = Color3.fromRGB(20,20,21), Active = true, Draggable = true})
+local passFrame = new("Frame", {Parent = screenGui, Name = "PasswordWindow", Size = UDim2.new(0, 400, 0, 220), Position = UDim2.new(0.5, -200, 0.5, -110), BackgroundColor3 = Color3.fromRGB(20,20,21), Active = true, Draggable = true})
 new("UICorner", {Parent = passFrame, CornerRadius = UDim.new(0,12)})
 local title = new("TextLabel", {Parent = passFrame, Size = UDim2.new(1, -28, 0, 40), Position = UDim2.new(0,14,0,8), BackgroundTransparency = 1, Text = "🔒 Secure Access", Font = Enum.Font.GothamBold, TextSize = 18, TextColor3 = Color3.fromRGB(240,240,240), TextXAlignment = Enum.TextXAlignment.Left})
 local desc = new("TextLabel", {Parent = passFrame, Size = UDim2.new(1, -28, 0, 28), Position = UDim2.new(0,14,0,46), BackgroundTransparency = 1, Text = "Enter password to unlock the loader.", Font = Enum.Font.Gotham, TextSize = 13, TextColor3 = Color3.fromRGB(180,180,180), TextXAlignment = Enum.TextXAlignment.Left})
@@ -80,8 +63,8 @@ input.FocusLost:Connect(function(enter)
     if enter then submitBtn:CaptureFocus(); submitBtn:ReleaseFocus(); submitBtn:MouseButton1Click() end
 end)
 
--- ===== LOADER BUTTON (hidden) =====
-local loaderBtn = new("TextButton", {Parent = screenGui, Name = "LoaderBtn", Size = UDim2.new(0, 56, 0, 56), Position = UDim2.new(0.06, 0, 0.35, 0), BackgroundColor3 = Color3.fromRGB(13,100,240), Text = "≡", Font = Enum.Font.GothamBold, TextSize = 26, TextColor3 = Color3.fromRGB(255,255,255), Visible = false, AutoButtonColor = false})
+-- ===== LOADER BUTTON =====
+local loaderBtn = new("TextButton", {Parent = screenGui, Name = "LoaderBtn", Size = UDim2.new(0, 64, 0, 64), Position = UDim2.new(0.06, 0, 0.35, 0), BackgroundColor3 = Color3.fromRGB(13,100,240), Text = "≡", Font = Enum.Font.GothamBold, TextSize = 30, TextColor3 = Color3.fromRGB(255,255,255), Visible = false, AutoButtonColor = false})
 new("UICorner", {Parent = loaderBtn, CornerRadius = UDim.new(1,0)})
 new("UIStroke", {Parent = loaderBtn, Thickness = 1, Transparency = 0.8})
 
@@ -105,27 +88,27 @@ do
     loaderBtn.MouseLeave:Connect(function() tween(loaderBtn, {BackgroundColor3 = Color3.fromRGB(13,100,240)}, 0.12) end)
 end
 
--- ===== MAIN MENU (hidden) =====
-local mainFrame = new("Frame", {Parent = screenGui, Name = "MainMenu", Size = UDim2.new(0,0,0,0), Position = UDim2.new(0.5, -UI_W/2, 0.5, -UI_H/2), BackgroundColor3 = Color3.fromRGB(18,18,19), Visible = false})
-new("UICorner", {Parent = mainFrame, CornerRadius = UDim.new(0,10)})
+-- ===== MAIN MENU =====
+local mainFrame = new("Frame", {Parent = screenGui, Name = "MainMenu", Size = UDim2.new(0,UI_W,0,UI_H), Position = UDim2.new(0.5, -UI_W/2, 0.5, -UI_H/2), BackgroundColor3 = Color3.fromRGB(18,18,19), Visible = false})
+new("UICorner", {Parent = mainFrame, CornerRadius = UDim.new(0,12)})
 new("UIStroke", {Parent = mainFrame, Thickness = 1, Transparency = 0.85})
 
 -- Title + Close
-local titleLbl = new("TextLabel", {Parent = mainFrame, Size = UDim2.new(1, -28, 0, 44), Position = UDim2.new(0,14,0,10), BackgroundTransparency = 1, Text = "⚡ Fish It Loader", Font = Enum.Font.GothamBold, TextSize = 18, TextColor3 = Color3.fromRGB(240,240,240), TextXAlignment = Enum.TextXAlignment.Left})
-local closeBtn = new("TextButton", {Parent = mainFrame, Size = UDim2.new(0,34,0,34), Position = UDim2.new(1, -46, 0, 8), BackgroundColor3 = Color3.fromRGB(200,60,60), Text = "X", Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Color3.fromRGB(255,255,255)})
+local titleLbl = new("TextLabel", {Parent = mainFrame, Size = UDim2.new(1, -28, 0, 44), Position = UDim2.new(0,14,0,10), BackgroundTransparency = 1, Text = "⚡ Fish It Loader", Font = Enum.Font.GothamBold, TextSize = 20, TextColor3 = Color3.fromRGB(240,240,240), TextXAlignment = Enum.TextXAlignment.Left})
+local closeBtn = new("TextButton", {Parent = mainFrame, Size = UDim2.new(0,40,0,40), Position = UDim2.new(1, -54, 0, 10), BackgroundColor3 = Color3.fromRGB(200,60,60), Text = "X", Font = Enum.Font.GothamBold, TextSize = 18, TextColor3 = Color3.fromRGB(255,255,255)})
 new("UICorner", {Parent = closeBtn, CornerRadius = UDim.new(0,8)})
 closeBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 
 -- Tabs
-local tabBar = new("Frame", {Parent = mainFrame, Size = UDim2.new(1, -28, 0, 34), Position = UDim2.new(0,14,0,60), BackgroundTransparency = 1})
+local tabBar = new("Frame", {Parent = mainFrame, Size = UDim2.new(1, -28, 0, 40), Position = UDim2.new(0,14,0,60), BackgroundTransparency = 1})
 local tabButtons = {}
 local tabNames = {"Play","Settings","About"}
 local contentFrames = {}
 for i,name in ipairs(tabNames) do
-    local btn = new("TextButton", {Parent = tabBar, Size = UDim2.new(0, 90, 1, 0), Position = UDim2.new(0, (i-1)*100,0,0), BackgroundColor3 = Color3.fromRGB(28,28,30), Text = name, Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = Color3.fromRGB(220,220,220)})
-    new("UICorner", {Parent = btn, CornerRadius = UDim.new(0,6)})
+    local btn = new("TextButton", {Parent = tabBar, Size = UDim2.new(0, 120, 1, 0), Position = UDim2.new(0, (i-1)*130,0,0), BackgroundColor3 = Color3.fromRGB(28,28,30), Text = name, Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Color3.fromRGB(220,220,220)})
+    new("UICorner", {Parent = btn, CornerRadius = UDim.new(0,8)})
     tabButtons[name] = btn
-    local frame = new("Frame", {Parent = mainFrame, Size = UDim2.new(1,-28,1,-110), Position = UDim2.new(0,14,0,100), BackgroundTransparency = 1, Visible = (i==1)})
+    local frame = new("Frame", {Parent = mainFrame, Size = UDim2.new(1,-28,1,-110), Position = UDim2.new(0,14,0,110), BackgroundTransparency = 1, Visible = (i==1)})
     contentFrames[name] = frame
     btn.MouseButton1Click:Connect(function()
         playClick()
@@ -134,24 +117,30 @@ for i,name in ipairs(tabNames) do
     end)
 end
 
--- ===== PLAY tab (UI only, no buttons) =====
+-- ===== PLAY Tab =====
 local playFrame = contentFrames["Play"]
+local speedLabel = new("TextLabel", {Parent = playFrame, Size = UDim2.new(0,200,0,30), Position = UDim2.new(0,10,0,10), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Color3.fromRGB(220,220,220), Text = "WalkSpeed: 16"})
+local speedInput = new("TextBox", {Parent = playFrame, Size = UDim2.new(0,100,0,30), Position = UDim2.new(0,220,0,10), BackgroundColor3 = Color3.fromRGB(30,30,31), Text = "16", Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Color3.fromRGB(255,255,255), ClearTextOnFocus = false})
+new("UICorner", {Parent = speedInput, CornerRadius = UDim.new(0,6)})
+speedInput.FocusLost:Connect(function(enter)
+    if enter then
+        local val = tonumber(speedInput.Text)
+        if val and val>0 then
+            Humanoid.WalkSpeed = val
+            speedLabel.Text = "WalkSpeed: "..val
+            toast("Speed set to "..val, Color3.fromRGB(50,200,50))
+        else
+            toast("Invalid speed!", Color3.fromRGB(220,80,80))
+        end
+    end
+end)
 
-local infoPanel = new("Frame", {Parent = playFrame, Size = UDim2.new(1,0,0,90), Position = UDim2.new(0,0,0,0), BackgroundColor3 = Color3.fromRGB(28,28,30)})
-new("UICorner", {Parent = infoPanel, CornerRadius = UDim.new(0,8)})
-local infoTxt = new("TextLabel", {Parent = infoPanel, Size = UDim2.new(1,-16,1,-16), Position = UDim2.new(0,8,0,8), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 14, TextColor3 = Color3.fromRGB(220,220,220), TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top})
-infoTxt.Text = "Fishing info will appear here..."
-
--- Buttons removed:
--- fishBtn, invBtn, sellBtn, shopOpenBtn
-
--- ===== SETTINGS tab =====
+-- ===== SETTINGS & ABOUT Tabs =====
 local settingsFrame = contentFrames["Settings"]
 local lbl = new("TextLabel", {Parent = settingsFrame, Size = UDim2.new(1, -16, 0, 30), Position = UDim2.new(0,8,0,8), BackgroundTransparency = 1, Text = "Settings coming soon...", Font = Enum.Font.Gotham, TextSize = 14, TextColor3 = Color3.fromRGB(220,220,220), TextXAlignment = Enum.TextXAlignment.Left})
 
--- ===== ABOUT tab =====
 local aboutFrame = contentFrames["About"]
-local lbl2 = new("TextLabel", {Parent = aboutFrame, Size = UDim2.new(1,-16,0,60), Position = UDim2.new(0,8,0,8), BackgroundTransparency = 1, Text = "Fish It Loader v1.0\nBy Hanzyy", Font = Enum.Font.Gotham, TextSize = 14, TextColor3 = Color3.fromRGB(220,220,220), TextXAlignment = Enum.TextXAlignment.Left})
+local lbl2 = new("TextLabel", {Parent = aboutFrame, Size = UDim2.new(1,-16,0,60), Position = UDim2.new(0,8,0,8), BackgroundTransparency = 1, Text = "Fish It Loader v2.0\nBy Hanzyy", Font = Enum.Font.Gotham, TextSize = 14, TextColor3 = Color3.fromRGB(220,220,220), TextXAlignment = Enum.TextXAlignment.Left})
 
 -- ===== SUBMIT PASSWORD =====
 submitBtn.MouseButton1Click:Connect(function()
@@ -159,7 +148,6 @@ submitBtn.MouseButton1Click:Connect(function()
     if input.Text == PASSWORD then
         passFrame.Visible = false
         loaderBtn.Visible = true
-        blur.Size = 6
         toast("Access granted!", Color3.fromRGB(50,220,50))
     else
         errorLabel.Text = "Incorrect password!"
