@@ -1,4 +1,4 @@
--- ===== Fish It UI Super Estetik =====
+-- ===== Fish It UI Dashboard + Tabs Modern =====
 -- Password: YILZI-EXECUTOR
 -- Place in StarterPlayerScripts (LocalScript)
 
@@ -22,6 +22,7 @@ local function requestPassword()
     frame.Size = UDim2.new(0,400,0,100)
     frame.Position = UDim2.new(0.5,-200,0.5,-50)
     frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    frame.BorderSizePixel = 0
     frame.Parent = gui
 
     local box = Instance.new("TextBox")
@@ -30,6 +31,8 @@ local function requestPassword()
     box.PlaceholderText = "Enter Password"
     box.TextColor3 = Color3.fromRGB(0,255,255)
     box.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    box.Font = Enum.Font.GothamBold
+    box.TextSize = 20
     box.Parent = frame
 
     box.FocusLost:Connect(function(enter)
@@ -46,7 +49,7 @@ local function requestPassword()
     end)
 end
 
--- ===== Loader Animasi =====
+-- ===== Loader =====
 function showLoader()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "LoaderGui"
@@ -55,6 +58,7 @@ function showLoader()
     frame.Size = UDim2.new(0,300,0,100)
     frame.Position = UDim2.new(0.5,-150,0.5,-50)
     frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    frame.BorderSizePixel = 0
     frame.Parent = gui
 
     local bar = Instance.new("Frame")
@@ -74,19 +78,24 @@ function showLoader()
     createUI()
 end
 
--- ===== Super Estetik UI =====
+-- ===== Main UI =====
 function createUI()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "FishItUI"
 
-    local main = Instance.new("Frame")
+    local main = Instance.new("Frame", gui)
     main.Size = UDim2.new(0,450,0,550)
     main.Position = UDim2.new(0.5,-225,0.5,-275)
-    main.BackgroundColor3 = Color3.fromRGB(10,10,10)
+    main.BackgroundColor3 = Color3.fromRGB(15,15,15)
     main.BorderSizePixel = 0
-    main.Parent = gui
+    main.ClipsDescendants = true
+    main.Name = "MainFrame"
+    main.AnchorPoint = Vector2.new(0.5,0.5)
+    main.Position = UDim2.new(0.5,0,0.5,0)
+    main.Rotation = 0
+    main.AutomaticSize = Enum.AutomaticSize.None
 
-    -- Background Neon / Glow
+    -- Background Gradient & Glow
     local gradient = Instance.new("UIGradient", main)
     gradient.Color = ColorSequence.new{
         ColorSequenceKeypoint.new(0,Color3.fromRGB(0,255,255)),
@@ -95,27 +104,15 @@ function createUI()
     }
     gradient.Rotation = 45
 
-    -- Particle Background
-    local particleFrame = Instance.new("Frame", main)
-    particleFrame.Size = UDim2.new(1,0,1,0)
-    particleFrame.BackgroundTransparency = 1
-    local ps = Instance.new("ParticleEmitter", particleFrame)
-    ps.Texture = "rbxassetid://241594314"
-    ps.Rate = 10
-    ps.Speed = NumberRange.new(20)
-    ps.Lifetime = NumberRange.new(1,2)
-    ps.Size = NumberSequence.new(2)
-    ps.Rotation = NumberRange.new(0,360)
-
     -- Title
     local title = Instance.new("TextLabel", main)
     title.Size = UDim2.new(1,0,0,50)
     title.Position = UDim2.new(0,0,0,0)
     title.BackgroundTransparency = 1
-    title.Text = "Fish It | Super UI"
+    title.Text = "Fish It | Dashboard"
+    title.Font = Enum.Font.GothamBold
     title.TextSize = 28
     title.TextColor3 = Color3.fromRGB(0,255,255)
-    title.Font = Enum.Font.GothamBold
 
     -- FPS Label
     local fpsLabel = Instance.new("TextLabel", main)
@@ -137,60 +134,37 @@ function createUI()
         end
     end)
 
-    -- ===== Tab Container =====
-    local tabFrame = Instance.new("Frame", main)
-    tabFrame.Size = UDim2.new(1,0,1,0)
-    tabFrame.Position = UDim2.new(0,0,0,50)
-    tabFrame.BackgroundTransparency = 1
+    -- ===== Tab Buttons =====
+    local tabContainer = Instance.new("Frame", main)
+    tabContainer.Size = UDim2.new(1,0,0,50)
+    tabContainer.Position = UDim2.new(0,0,0,50)
+    tabContainer.BackgroundTransparency = 1
 
     local tabs = {}
-    local currentTab = nil
 
-    local function createTabButton(name, position)
-        local btn = Instance.new("TextButton", main)
-        btn.Size = UDim2.new(0,120,0,40)
-        btn.Position = position
+    local function createTab(name)
+        local btn = Instance.new("TextButton", tabContainer)
+        btn.Size = UDim2.new(0,120,0,30)
+        btn.Position = UDim2.new(#tabs * 0.3,10,0,10)
         btn.Text = name
-        btn.TextSize = 18
-        btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
-        btn.TextColor3 = Color3.fromRGB(0,255,255)
         btn.Font = Enum.Font.GothamBold
-        btn.BorderSizePixel = 0
-
-        -- Hover glow
-        btn.MouseEnter:Connect(function()
-            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3=Color3.fromRGB(0,0,0)}):Play()
-        end)
-        btn.MouseLeave:Connect(function()
-            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3=Color3.fromRGB(20,20,20)}):Play()
-        end)
-
-        return btn
-    end
-
-    -- ===== Feature Tabs =====
-    local featureTab = Instance.new("Frame", tabFrame)
-    featureTab.Size = UDim2.new(1,0,1,0)
-    featureTab.BackgroundTransparency = 1
-    featureTab.Visible = true
-
-    -- Buttons dalam Feature Tab
-    local function createFeatureButton(text, pos, callback)
-        local btn = Instance.new("TextButton", featureTab)
-        btn.Size = UDim2.new(0,200,0,50)
-        btn.Position = pos
-        btn.Text = text
-        btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
-        btn.TextColor3 = Color3.fromRGB(0,255,255)
         btn.TextSize = 18
-        btn.Font = Enum.Font.GothamBold
+        btn.TextColor3 = Color3.fromRGB(0,255,255)
+        btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
         btn.BorderSizePixel = 0
+        btn.AutoButtonColor = false
+        btn.Name = name.."Tab"
 
-        -- Glow neon effect
+        -- Rounded corners
+        local uicorner = Instance.new("UICorner", btn)
+        uicorner.CornerRadius = UDim.new(0,10)
+
+        -- Glow stroke
         local stroke = Instance.new("UIStroke", btn)
         stroke.Thickness = 2
         stroke.Color = Color3.fromRGB(0,255,255)
 
+        -- Hover Animation
         btn.MouseEnter:Connect(function()
             TweenService:Create(btn,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(0,0,0)}):Play()
         end)
@@ -198,35 +172,101 @@ function createUI()
             TweenService:Create(btn,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(20,20,20)}):Play()
         end)
 
-        btn.MouseButton1Click:Connect(callback)
+        table.insert(tabs, btn)
         return btn
     end
 
-    createFeatureButton("Toggle Speed", UDim2.new(0.5,-100,0,0), function()
+    local dashboardTab = createTab("Dashboard")
+    local featuresTab = createTab("Features")
+
+    -- ===== Dashboard Panel =====
+    local dashboardFrame = Instance.new("Frame", main)
+    dashboardFrame.Size = UDim2.new(0.9,0,0.7,0)
+    dashboardFrame.Position = UDim2.new(0.05,0,0.15,0)
+    dashboardFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    dashboardFrame.Visible = true
+    local dashCorner = Instance.new("UICorner", dashboardFrame)
+    dashCorner.CornerRadius = UDim.new(0,15)
+
+    local dashLabel = Instance.new("TextLabel", dashboardFrame)
+    dashLabel.Size = UDim2.new(1,-20,1,-20)
+    dashLabel.Position = UDim2.new(0,10,0,10)
+    dashLabel.BackgroundTransparency = 1
+    dashLabel.TextColor3 = Color3.fromRGB(0,255,255)
+    dashLabel.Font = Enum.Font.GothamSemibold
+    dashLabel.TextSize = 20
+    dashLabel.TextWrapped = true
+    dashLabel.Text = "Welcome, "..player.Name.."\nServer Members: "..#Players:GetPlayers()
+
+    -- ===== Features Panel =====
+    local featuresFrame = Instance.new("Frame", main)
+    featuresFrame.Size = UDim2.new(0.9,0,0.7,0)
+    featuresFrame.Position = UDim2.new(0.05,0,0.15,0)
+    featuresFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    featuresFrame.Visible = false
+    local featCorner = Instance.new("UICorner", featuresFrame)
+    featCorner.CornerRadius = UDim.new(0,15)
+
+    local function createFeatureButton(parent,text,pos,callback)
+        local btn = Instance.new("TextButton", parent)
+        btn.Size = UDim2.new(0,200,0,40)
+        btn.Position = pos
+        btn.BackgroundColor3 = Color3.fromRGB(15,15,15)
+        btn.Text = text
+        btn.Font = Enum.Font.GothamSemibold
+        btn.TextSize = 18
+        btn.TextColor3 = Color3.fromRGB(0,255,255)
+        local corner = Instance.new("UICorner",btn)
+        corner.CornerRadius = UDim.new(0,10)
+        local stroke = Instance.new("UIStroke",btn)
+        stroke.Color = Color3.fromRGB(0,255,255)
+        stroke.Thickness = 2
+
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(0,0,0)}):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(15,15,15)}):Play()
+        end)
+
+        btn.MouseButton1Click:Connect(callback)
+    end
+
+    createFeatureButton(featuresFrame,"Toggle Speed",UDim2.new(0.5,-100,0,0),function()
         if humanoid.WalkSpeed == 16 then humanoid.WalkSpeed = 100 else humanoid.WalkSpeed = 16 end
     end)
-    createFeatureButton("Toggle Jump", UDim2.new(0.5,-100,0,70), function()
+    createFeatureButton(featuresFrame,"Toggle Jump",UDim2.new(0.5,-100,0,60),function()
         if humanoid.JumpPower == 50 then humanoid.JumpPower = 200 else humanoid.JumpPower = 50 end
     end)
-    createFeatureButton("About", UDim2.new(0.5,-100,0,140), function()
+    createFeatureButton(featuresFrame,"About",UDim2.new(0.5,-100,0,120),function()
         local about = Instance.new("Frame", main)
         about.Size = UDim2.new(0,300,0,150)
         about.Position = UDim2.new(0.5,-150,0.5,-75)
-        about.BackgroundColor3 = Color3.fromRGB(10,10,10)
+        about.BackgroundColor3 = Color3.fromRGB(15,15,15)
+        local corner = Instance.new("UICorner",about)
+        corner.CornerRadius = UDim.new(0,15)
         local label = Instance.new("TextLabel", about)
-        label.Size = UDim2.new(1,0,1,0)
+        label.Size = UDim2.new(1,-20,1,-20)
+        label.Position = UDim2.new(0,10,0,10)
         label.BackgroundTransparency = 1
         label.TextColor3 = Color3.fromRGB(0,255,255)
         label.TextSize = 18
+        label.Font = Enum.Font.GothamSemibold
         label.TextWrapped = true
         label.Text = "Fish It UI\nPlayer: "..player.Name.."\nServer Member: "..#Players:GetPlayers()
         task.wait(5)
         about:Destroy()
     end)
 
-    -- Tab Buttons
-    createTabButton("Features", UDim2.new(0,10,0,50))
-    -- Bisa ditambah Tab lain seperti Inventory, Shop dsb
+    -- ===== Tab Switch =====
+    dashboardTab.MouseButton1Click:Connect(function()
+        dashboardFrame.Visible = true
+        featuresFrame.Visible = false
+    end)
+    featuresTab.MouseButton1Click:Connect(function()
+        dashboardFrame.Visible = false
+        featuresFrame.Visible = true
+    end)
 end
 
 requestPassword()
