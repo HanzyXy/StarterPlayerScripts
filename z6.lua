@@ -1,6 +1,5 @@
--- FINAL: Mizu Hub Script Hub (Modern UI)
+-- FINAL ULTIMATE: Mizu Hub Script Hub (Cinematic Modern UI)
 -- Place in StarterPlayerScripts (LocalScript)
--- Security: hanya user yang ada di database username bisa akses
 
 -- ===== Services =====
 local Players = game:GetService("Players")
@@ -8,22 +7,13 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
+local Debris = game:GetService("Debris")
 
 local LocalPlayer = Players.LocalPlayer
 
 -- ===== Security =====
-local AllowedUsers = { "Franzyyy16", "7SEAYilzi", "Player3" } -- Ganti dengan username Roblox yang diizinkan
-
-local function isAllowed(username)
-    for _, name in pairs(AllowedUsers) do
-        if name == username then
-            return true
-        end
-    end
-    return false
-end
-
-if not isAllowed(LocalPlayer.Name) then
+local AllowedUsers = { "Franzyyy16", "7SEAYilzi", "Player3" }
+if not table.find(AllowedUsers, LocalPlayer.Name) then
     warn("Access Denied: Username tidak terdaftar")
     return
 end
@@ -39,17 +29,17 @@ OrionLib:MakeNotification({
     Time = 3
 })
 
--- Tambahkan sound loading
+-- Sound loading
 local LoadSound = Instance.new("Sound")
-LoadSound.SoundId = "rbxassetid://138187576" -- Ganti dengan sound ID yang diinginkan
+LoadSound.SoundId = "rbxassetid://138187576"
 LoadSound.Volume = 1
 LoadSound.PlayOnRemove = true
 LoadSound.Parent = LocalPlayer:WaitForChild("PlayerGui")
-LoadSound:Destroy() -- Play sound
+LoadSound:Destroy()
 
 wait(3)
 
--- ===== Background Glow & Particle =====
+-- ===== Background Particle Neon Interaktif =====
 local bgPart = Instance.new("Part")
 bgPart.Anchored = true
 bgPart.CanCollide = false
@@ -59,11 +49,21 @@ bgPart.Transparency = 1
 bgPart.Parent = workspace
 
 local particle = Instance.new("ParticleEmitter")
-particle.Texture = "rbxassetid://243660364" -- Partikel glow
-particle.Rate = 50
+particle.Texture = "rbxassetid://243660364"
+particle.Rate = 75
 particle.Lifetime = NumberRange.new(2)
-particle.Speed = NumberRange.new(1,3)
+particle.Speed = NumberRange.new(2,4)
+particle.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0,255,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,0,255))
+}
 particle.Parent = bgPart
+
+-- Particle mengikuti mouse
+RunService.RenderStepped:Connect(function()
+    local mouse = LocalPlayer:GetMouse()
+    bgPart.Position = Vector3.new(mouse.Hit.X, mouse.Hit.Y, mouse.Hit.Z)
+end)
 
 -- ===== Window Setup =====
 local Window = OrionLib:MakeWindow({
@@ -84,11 +84,12 @@ local UniversalTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Toggle Example
+-- Toggle Example with auto save
 UniversalTab:AddToggle({
     Name = "Auto Jump",
-    Default = false,
+    Default = OrionLib:LoadConfig("Auto Jump") or false,
     Callback = function(value)
+        OrionLib:SaveConfig("Auto Jump", value)
         if value then
             print("Auto Jump ON")
         else
@@ -97,41 +98,51 @@ UniversalTab:AddToggle({
     end
 })
 
--- Slider Example
+-- Slider Example with auto save
 UniversalTab:AddSlider({
     Name = "Speed",
     Min = 16,
     Max = 100,
-    Default = 16,
+    Default = OrionLib:LoadConfig("Speed") or 16,
     Increment = 1,
     Suffix = " WalkSpeed",
     Callback = function(value)
+        OrionLib:SaveConfig("Speed", value)
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
             LocalPlayer.Character.Humanoid.WalkSpeed = value
         end
     end
 })
 
--- Dropdown Example
+-- Dropdown Example with auto save
 UniversalTab:AddDropdown({
     Name = "Select Tool",
     Options = { "Sword", "Gun", "Magic" },
-    Default = "Sword",
+    Default = OrionLib:LoadConfig("Select Tool") or "Sword",
     Callback = function(option)
+        OrionLib:SaveConfig("Select Tool", option)
         print("Tool dipilih: "..option)
     end
 })
 
--- Buttons dengan sound
-local function ButtonSound()
+-- Button sound function with glow animation
+local function ButtonSound(btn)
     local s = Instance.new("Sound")
-    s.SoundId = "rbxassetid://12222225" -- Ganti dengan sound ID tombol
+    s.SoundId = "rbxassetid://12222225"
     s.Volume = 1
     s.Parent = LocalPlayer:WaitForChild("PlayerGui")
     s:Play()
-    game:GetService("Debris"):AddItem(s,2)
+    Debris:AddItem(s,2)
+
+    -- Glow animation
+    if btn then
+        local originalColor = btn.BackgroundColor3
+        btn.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+        TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = originalColor}):Play()
+    end
 end
 
+-- Buttons
 UniversalTab:AddButton({
     Name = "Fly Script",
     Callback = function()
@@ -171,11 +182,12 @@ GameTab:AddButton({
     end
 })
 
--- Toggle untuk auto farm (contoh)
+-- Toggle Auto Farm
 GameTab:AddToggle({
     Name = "Auto Farm",
-    Default = false,
+    Default = OrionLib:LoadConfig("Auto Farm") or false,
     Callback = function(value)
+        OrionLib:SaveConfig("Auto Farm", value)
         if value then
             print("Auto Farm ON")
         else
@@ -187,7 +199,7 @@ GameTab:AddToggle({
 -- ===== Init Orion =====
 OrionLib:Init()
 
--- ===== Toggle Window dengan RightShift =====
+-- ===== Toggle Window Shortcut =====
 UserInputService.InputBegan:Connect(function(input, processed)
     if input.KeyCode == Enum.KeyCode.RightShift and not processed then
         Window:Toggle()
