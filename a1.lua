@@ -22,7 +22,7 @@ local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jens
 
 -- ===== Loader Cinematic =====
 OrionLib:MakeNotification({
-    Name = "Mizu Hub Loading...",
+    Name = "Evolution Hub Loading...",
     Content = "Harap tunggu sebentar",
     Image = "rbxassetid://4483345998",
     Time = 3
@@ -56,12 +56,12 @@ end)
 
 -- ===== Window Setup =====
 local Window = OrionLib:MakeWindow({
-    Name = "Mizu Hub | Script Hub",
+    Name = "Evolution Hub | Script Hub",
     HidePremium = false,
     SaveConfig = true,
     ConfigFolder = "MizuHubConfig",
     IntroEnabled = true,
-    IntroText = "Mizu Hub",
+    IntroText = "Evolution Hub",
     IntroIcon = "rbxassetid://4483345998",
     Dragable = true
 })
