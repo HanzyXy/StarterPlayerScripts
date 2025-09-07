@@ -17,72 +17,17 @@ if not table.find(AllowedUsers, LocalPlayer.Name) then
     return
 end
 
--- ===== Password Security =====
-local function RequestPassword(correctPassword)
-    local passwordGui = Instance.new("ScreenGui")
-    passwordGui.Name = "PasswordGui"
-    passwordGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0,300,0,150)
-    frame.Position = UDim2.new(0.5,-150,0.5,-75)
-    frame.BackgroundColor3 = Color3.fromRGB(45,0,80)
-    frame.BorderSizePixel = 0
-    frame.Parent = passwordGui
-
-    local textbox = Instance.new("TextBox")
-    textbox.Size = UDim2.new(0,250,0,50)
-    textbox.Position = UDim2.new(0.5,-125,0,30)
-    textbox.PlaceholderText = "Enter Password"
-    textbox.Text = ""
-    textbox.BackgroundColor3 = Color3.fromRGB(60,0,100)
-    textbox.TextColor3 = Color3.fromRGB(255,255,255)
-    textbox.TextScaled = true
-    textbox.Parent = frame
-
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0,120,0,40)
-    button.Position = UDim2.new(0.5,-60,0,90)
-    button.Text = "Enter"
-    button.BackgroundColor3 = Color3.fromRGB(120,0,255)
-    button.TextColor3 = Color3.fromRGB(255,255,255)
-    button.TextScaled = true
-    button.Parent = frame
-
-    local success = Instance.new("BoolValue")
-    success.Value = false
-
-    local function CheckPassword()
-        if textbox.Text == correctPassword then
-            success.Value = true
-            passwordGui:Destroy()
-        else
-            textbox.Text = ""
-            textbox.PlaceholderText = "Wrong Password!"
-        end
-    end
-
-    button.MouseButton1Click:Connect(CheckPassword)
-    textbox.FocusLost:Connect(function(enter)
-        if enter then CheckPassword() end
-    end)
-
-    repeat wait() until success.Value
-end
-
-RequestPassword("YILZI-EXECUTOR") -- PASSWORD
-
 -- ===== OrionLib Load =====
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jensonhirst/Orion/main/source"))()
 
--- ===== Loader Notification =====
+-- ===== Loader Cinematic =====
 OrionLib:MakeNotification({
     Name = "Mizu Hub Loading...",
-    Content = "Harap tunggu sebentar",
+    Content = "Tunggu sebentar, hub cinematic sedang di-load!",
     Image = "rbxassetid://4483345998",
-    Time = 3
+    Time = 4
 })
-wait(3)
+wait(4)
 
 -- ===== Background Particle Neon =====
 local bgPart = Instance.new("Part")
@@ -95,13 +40,14 @@ bgPart.Parent = workspace
 
 local particle = Instance.new("ParticleEmitter")
 particle.Texture = "rbxassetid://243660364"
-particle.Rate = 75
+particle.Rate = 100
 particle.Lifetime = NumberRange.new(2)
-particle.Speed = NumberRange.new(2,4)
+particle.Speed = NumberRange.new(2,5)
 particle.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(0, Color3.fromRGB(180,0,255)),
     ColorSequenceKeypoint.new(1, Color3.fromRGB(255,0,255))
 }
+particle.Size = NumberSequence.new(2)
 particle.Parent = bgPart
 
 RunService.RenderStepped:Connect(function()
@@ -121,11 +67,29 @@ local Window = OrionLib:MakeWindow({
     Dragable = true
 })
 
--- ===== Tabs Setup (Purple Theme) =====
-local UniversalTab = Window:MakeTab({ Name = "Universal Scripts", Icon = "rbxassetid://4483345998", PremiumOnly = false })
-local GameTab = Window:MakeTab({ Name = "Game Scripts", Icon = "rbxassetid://4483345998", PremiumOnly = false })
-local AboutTab = Window:MakeTab({ Name = "About", Icon = "rbxassetid://4483345998", PremiumOnly = false })
-local SettingsTab = Window:MakeTab({ Name = "Settings", Icon = "rbxassetid://4483345998", PremiumOnly = false })
+-- ===== Tabs Setup (Purple Theme & Bulat Kecil) =====
+local function MakeCircularTab(window, name, icon)
+    local tab = window:MakeTab({
+        Name = name,
+        Icon = icon or "rbxassetid://4483345998",
+        PremiumOnly = false
+    })
+    -- ubah button jadi bulat & kecil
+    tab.Button.Size = UDim2.new(0,50,0,50)
+    tab.Button.BackgroundTransparency = 0.3
+    tab.Button.BackgroundColor3 = Color3.fromRGB(180,0,255)
+    tab.Button.BorderSizePixel = 0
+    tab.Button.Text = ""
+    tab.Button.Image = icon or "rbxassetid://4483345998"
+    tab.Button.AutoButtonColor = false
+    tab.Button.TextScaled = false
+    return tab
+end
+
+local UniversalTab = MakeCircularTab(Window, "Universal", "rbxassetid://4483345998")
+local GameTab = MakeCircularTab(Window, "Game", "rbxassetid://4483345998")
+local AboutTab = MakeCircularTab(Window, "About", "rbxassetid://4483345998")
+local SettingsTab = MakeCircularTab(Window, "Settings", "rbxassetid://4483345998")
 
 -- ===== About Tab =====
 AboutTab:AddLabel("Developer : Yilzi")
@@ -191,17 +155,18 @@ GameTab:AddButton({ Name = "Doors Script", Callback = function() loadstring(game
 local logoGui = Instance.new("ScreenGui")
 logoGui.Name = "MizuHubLogoGui"
 logoGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-logoGui.Enabled = false
+logoGui.Enabled = true
 
 local logoButton = Instance.new("ImageButton")
-logoButton.Size = UDim2.new(0, 100, 0, 100)
+logoButton.Size = UDim2.new(0, 80, 0, 80)
 logoButton.Position = UDim2.new(0, 20, 0, 20)
 logoButton.Image = "rbxassetid://4483345998"
-logoButton.BackgroundTransparency = 1
+logoButton.BackgroundTransparency = 0.5
+logoButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
 logoButton.Parent = logoGui
 
 -- ===== Draggable Function =====
-local function MakeDraggable(guiObject, frame)
+local function MakeDraggable(frame)
     local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -229,13 +194,13 @@ local function MakeDraggable(guiObject, frame)
 end
 
 -- ===== Apply draggable =====
-MakeDraggable(logoGui, logoButton)
-MakeDraggable(LocalPlayer.PlayerGui, Window.Frame)
+MakeDraggable(logoButton)
+MakeDraggable(Window.Frame)
 
--- ===== Fade In/Out Logo =====
+-- ===== Fade Logo =====
 local function FadeLogo(enable)
     logoGui.Enabled = true
-    local goal = {BackgroundTransparency = enable and 0 or 1}
+    local goal = {BackgroundTransparency = enable and 0 or 0.5}
     TweenService:Create(logoButton, TweenInfo.new(0.5), goal):Play()
     if not enable then
         wait(0.5)
